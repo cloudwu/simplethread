@@ -95,46 +95,54 @@ thread_join(struct thread *threads, int n) {
 }
 
 struct thread_event {
-	pthread_cond_t cond;
-	pthread_mutex_t mutex;
+	pthread_cond_t *cond;
+	pthread_mutex_t *mutex;
 	int flag;
 };
 
 static void 
 thread_event_create(struct thread_event *ev) {
-	pthread_mutex_init(&ev->mutex, NULL);
-	pthread_cond_init(&ev->cond, NULL);
+    ev->mutex = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
+    memset(ev->mutex, 0, sizeof(pthread_mutex_t));
+    pthread_mutex_init(ev->mutex, NULL);
+
+    ev->cond = (pthread_cond_t *)malloc(sizeof(pthread_cond_t));
+    memset(ev->cond, 0, sizeof(pthread_cond_t));
+    pthread_cond_init(ev->cond, NULL);
 	ev->flag = 0;
 }
 
 static void 
 thread_event_release(struct thread_event *ev) {
 	if (ev->mutex) {
-		pthread_mutex_destroy(ev->mutex);
-		pthread_cond_destroy(ev->cond);
-		ev->mutex = NULL;
-		ev->cond = NULL;
-	}
+        pthread_mutex_destroy(ev->mutex);
+        free(ev->mutex);
+        ev->mutex = NULL;
+
+        pthread_cond_destroy(ev->cond);
+        free(ev->cond);
+        ev->cond = NULL;
+    }
 }
 
 static void
 thread_event_trigger(struct thread_event *ev) {
-	pthread_mutex_lock(&ev->mutex);
-	ev->flag = 1;
-	pthread_mutex_unlock(&ev->mutex);
-	pthread_cond_signal(&ev->cond);
+    pthread_mutex_lock(ev->mutex);
+    ev->flag = 1;
+    pthread_mutex_unlock(ev->mutex);
+    pthread_cond_signal(ev->cond);
 }
 
 static void
 thread_event_wait(struct thread_event *ev) {
-	pthread_mutex_lock(&ev->mutex);
+	pthread_mutex_lock(ev->mutex);
 
 	while (!ev->flag)
-		pthread_cond_wait(&ev->cond, &ev->mutex);
+		pthread_cond_wait(ev->cond, ev->mutex);
 
 	ev->flag = 0;
 
-	pthread_mutex_unlock(&ev->mutex);
+	pthread_mutex_unlock(ev->mutex);
 }
 
 #endif
