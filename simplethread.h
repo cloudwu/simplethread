@@ -86,7 +86,7 @@ thread_join(struct thread *threads, int n) {
 	pthread_t pid[n];
 	int i;
 	for (i=0;i<n;i++) {
-		create_thread(&pid[i], thread_function, &threads[i]);
+		pthread_create(&pid[i], NULL, thread_function, &threads[i]);
 	}
 
 	for (i=0;i<n;i++) {
