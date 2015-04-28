@@ -18,6 +18,12 @@ static void thread_event_wait(struct thread_event *ev);
 
 #include <windows.h>
 
+#ifdef _MSC_VER
+#define INLINE __inline
+#else
+#define INLINE inline
+#endif
+
 static DWORD WINAPI
 thread_function(LPVOID lpParam) {
 	struct thread * t = (struct thread *)lpParam;
@@ -47,12 +53,12 @@ struct thread_event {
 	HANDLE event;
 };
 
-static void 
+static INLINE void
 thread_event_create(struct thread_event *ev) {
 	ev->event = CreateEvent(NULL, FALSE, FALSE, NULL);
 }
 
-static void
+static INLINE void
 thread_event_release(struct thread_event *ev) {
 	if (ev->event) {
 		CloseHandle(ev->event);
@@ -60,12 +66,12 @@ thread_event_release(struct thread_event *ev) {
 	}
 }
 
-static void
+static INLINE void
 thread_event_trigger(struct thread_event *ev) {
 	SetEvent(ev->event);
 }
 
-static void
+static INLINE void
 thread_event_wait(struct thread_event *ev) {
 	WaitForSingleObject(ev->event, INFINITE);
 }
@@ -102,20 +108,20 @@ struct thread_event {
 	int flag;
 };
 
-static void 
+static inline void
 thread_event_create(struct thread_event *ev) {
 	pthread_mutex_init(&ev->mutex, NULL);
 	pthread_cond_init(&ev->cond, NULL);
 	ev->flag = 0;
 }
 
-static void 
+static inline void
 thread_event_release(struct thread_event *ev) {
 	pthread_mutex_destroy(&ev->mutex);
 	pthread_cond_destroy(&ev->cond);
 }
 
-static void
+static inline void
 thread_event_trigger(struct thread_event *ev) {
 	pthread_mutex_lock(&ev->mutex);
 	ev->flag = 1;
@@ -123,7 +129,7 @@ thread_event_trigger(struct thread_event *ev) {
 	pthread_cond_signal(&ev->cond);
 }
 
-static void
+static inline void
 thread_event_wait(struct thread_event *ev) {
 	pthread_mutex_lock(&ev->mutex);
 
