@@ -86,7 +86,9 @@ thread_join(struct thread *threads, int n) {
 	pthread_t pid[n];
 	int i;
 	for (i=0;i<n;i++) {
-		create_thread(&pid[i], thread_function, &threads[i]);
+		if (pthread_create(&pid[i], NULL, thread_function, &threads[i])) {
+			return;
+		}
 	}
 
 	for (i=0;i<n;i++) {
@@ -109,12 +111,8 @@ thread_event_create(struct thread_event *ev) {
 
 static void 
 thread_event_release(struct thread_event *ev) {
-	if (ev->mutex) {
-		pthread_mutex_destroy(ev->mutex);
-		pthread_cond_destroy(ev->cond);
-		ev->mutex = NULL;
-		ev->cond = NULL;
-	}
+	pthread_mutex_destroy(&ev->mutex);
+	pthread_cond_destroy(&ev->cond);
 }
 
 static void
