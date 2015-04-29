@@ -24,14 +24,14 @@ static void thread_event_wait(struct thread_event *ev);
 #define INLINE inline
 #endif
 
-static DWORD WINAPI
+static DWORD INLINE WINAPI
 thread_function(LPVOID lpParam) {
 	struct thread * t = (struct thread *)lpParam;
 	t->func(t->ud);
 	return 0;
 }
 
-static void
+static INLINE void
 thread_join(struct thread * threads, int n) {
 	int i;
 	HANDLE *thread_handle = (HANDLE *)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,n*sizeof(HANDLE));
@@ -80,14 +80,14 @@ thread_event_wait(struct thread_event *ev) {
 
 #include <pthread.h>
 
-static void *
+static inline void *
 thread_function(void * args) {
 	struct thread * t = (struct thread *)args;
 	t->func(t->ud);
 	return NULL;
 }
 
-static void
+static inline void
 thread_join(struct thread *threads, int n) {
 	pthread_t pid[n];
 	int i;
