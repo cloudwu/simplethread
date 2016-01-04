@@ -12,6 +12,7 @@
 #define atom_dec(ptr) InterlockedDecrement((LONG volatile *)ptr)
 #define atom_sync() MemoryBarrier()
 #define atom_spinlock(ptr) while (InterlockedExchange((LONG volatile *)ptr , 1)) {}
+#define atom_spintrylock(ptr) (InterlockedExchange((LONG volatile *)ptr , 1) == 0)
 #define atom_spinunlock(ptr) InterlockedExchange((LONG volatile *)ptr, 0)
 
 #else
@@ -22,6 +23,7 @@
 #define atom_dec(ptr) __sync_sub_and_fetch(ptr, 1)
 #define atom_sync() __sync_synchronize()
 #define atom_spinlock(ptr) while (__sync_lock_test_and_set(ptr,1)) {}
+#define atom_spintrylock(ptr) (__sync_lock_test_and_set(ptr,1) == 0)
 #define atom_spinunlock(ptr) __sync_lock_release(ptr)
 
 #endif
@@ -29,6 +31,7 @@
 /* spin lock */
 #define spin_lock(Q) atom_spinlock(&(Q)->lock)
 #define spin_unlock(Q) atom_spinunlock(&(Q)->lock)
+#define spin_trylock(Q) atom_spintrylock(&(Q)->lock)
 
 /* read write lock */
 
